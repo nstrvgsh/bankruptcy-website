@@ -71,6 +71,309 @@
         </div>
     </section>
 
+Ниже — готовые вставки, чтобы добавить опросник «подходит ли вам списание долгов» на 5 вопросов, прогресс-бар и финальную форму (имя + телефон) как на скриншоте. Вставьте **HTML** в нужное место страницы, добавьте **CSS** в `main.css`, а **JS** в `script.js`.
+
+---
+
+## 1) HTML — вставьте в любое место вашей страницы (например, сразу после hero-секции)
+
+```html
+<section class="lead-quiz" id="lead-quiz" aria-label="Опрос по банкротству">
+  <div class="container">
+    <div class="lead-quiz__header">
+      <h2>Узнайте, подходит ли вам процедура <span class="nowrap">100% списания долгов</span></h2>
+      <p>Ответьте всего на 5 вопросов</p>
+    </div>
+
+    <div class="lead-quiz__card">
+      <div class="lead-quiz__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="lead-quiz__progress-bar" style="width: 0%"></div>
+        <div class="lead-quiz__progress-text">0%</div>
+      </div>
+
+      <div class="lead-quiz__body" id="lead-quiz-body" aria-live="polite"></div>
+
+      <!-- Сообщения об ошибках / успехе -->
+      <div class="lead-quiz__note" id="lead-quiz-note" hidden></div>
+    </div>
+  </div>
+</section>
+```
+
+> Блок вопросов и финальная форма рендерятся JavaScript-ом (см. раздел JS).
+
+---
+
+## 2) CSS — добавьте в конец `main.css`
+
+```css
+/* ===== Lead Quiz (опрошник) ===== */
+.lead-quiz {
+  background: #8fd14f; /* зелёный фон как на примере */
+  color: #fff;
+  padding: 48px 0;
+}
+.lead-quiz .nowrap { white-space: nowrap; }
+.lead-quiz__header { text-align: center; margin-bottom: 24px; }
+.lead-quiz__header h2 { font-size: 28px; line-height: 1.25; margin: 0 0 8px; }
+.lead-quiz__header p { margin: 0; opacity: .95; }
+
+.lead-quiz__card {
+  background: #fff; color: #222;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 880px;
+  margin: 24px auto 0;
+  box-shadow: 0 12px 30px rgba(0,0,0,.12);
+}
+
+/* Прогресс-бар */
+.lead-quiz__progress {
+  position: relative; height: 16px; border-radius: 999px;
+  background: #ecf3e7; overflow: hidden; margin-bottom: 20px;
+}
+.lead-quiz__progress-bar { height: 100%; width: 0%; background: #69b524; transition: width .3s ease; }
+.lead-quiz__progress-text { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #1d5d00; font-weight: 600; }
+
+/* Карточка вопроса */
+.lead-quiz__question { font-size: 20px; line-height: 1.35; margin: 8px 0 16px; font-weight: 700; }
+.lead-quiz__controls { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* Кнопки (да/нет) и основная */
+.btn-quiz {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 12px 18px; border-radius: 10px; border: 0; cursor: pointer;
+  font-weight: 700; transition: transform .05s ease, box-shadow .2s ease; user-select: none;
+}
+.btn-quiz:active { transform: translateY(1px); }
+.btn-yes { background: #69b524; color: #fff; }
+.btn-yes:hover { box-shadow: 0 6px 16px rgba(105,181,36,.35); }
+.btn-no  { background: #f0f4ef; color: #333; }
+.btn-no:hover  { box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+
+/* Финальная форма */
+.lead-quiz__form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.lead-quiz__form .full { grid-column: 1 / -1; }
+.input {
+  width: 100%; border: 1px solid #e3e7e2; border-radius: 10px; padding: 14px 12px; font-size: 16px;
+}
+.input:focus { outline: 2px solid #8fd14f; border-color: transparent; }
+
+.btn-submit {
+  background: #ff7a1a; color: #fff; border: 0; border-radius: 12px; padding: 14px 16px; font-size: 16px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 10px 18px rgba(255,122,26,.35); transition: transform .05s ease, box-shadow .2s ease;
+}
+.btn-submit:active { transform: translateY(1px); }
+
+/* Бейдж «Засекайте 15 минут» */
+.lead-quiz__badge { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #1e6f00; background: #eaf6df; border-radius: 999px; padding: 6px 10px; }
+.lead-quiz__badge i { font-size: 14px; }
+
+/* Сообщения */
+.lead-quiz__note { margin-top: 12px; font-size: 14px; }
+.lead-quiz__note.error { color: #b00020; }
+.lead-quiz__note.success { color: #1e6f00; }
+
+/* Адаптив */
+@media (max-width: 720px) {
+  .lead-quiz { padding: 32px 0; }
+  .lead-quiz__form { grid-template-columns: 1fr; }
+}
+```
+
+---
+
+## 3) JS — добавьте в конец `script.js`
+
+> Если у вас уже используется строгий бандл/модульная сборка — оберните код в модуль. Ниже — вариант, работающий «как есть» на странице.
+
+```javascript
+(function () {
+  const root = document.getElementById('lead-quiz');
+  if (!root) return; // нет блока — выходим
+
+  const body = root.querySelector('#lead-quiz-body');
+  const progress = root.querySelector('.lead-quiz__progress');
+  const progressBar = root.querySelector('.lead-quiz__progress-bar');
+  const progressText = root.querySelector('.lead-quiz__progress-text');
+  const note = root.querySelector('#lead-quiz-note');
+
+  // 5 вопросов — максимально близко к тому, что нужно для первичной оценки, без гарантий
+  const questions = [
+    { key: 'debt_over_500k', text: 'Сумма ваших долгов превышает 500 000 ₽?' },
+    { key: 'overdue_over_3m', text: 'Просрочка платежей по обязательствам более 3 месяцев?' },
+    { key: 'has_official_income', text: 'Есть официальные доходы (зарплата, пенсия и т.п.)?' },
+    { key: 'extra_property', text: 'Есть имущество, кроме единственного жилья и обычных предметов быта?' },
+    { key: 'prev_bankruptcy', text: 'Вы проходили процедуру банкротства за последние 5 лет?' }
+  ];
+
+  let step = 0; // текущий шаг (вопрос)
+  const answers = {}; // сюда собираем ответы
+
+  function setProgress(percent) {
+    progressBar.style.width = percent + '%';
+    progress.setAttribute('aria-valuenow', String(percent));
+    progressText.textContent = percent + '%';
+  }
+
+  function calcPercent() {
+    // 100% показываем сразу после прохождения 5-го вопроса (перед формой)
+    const total = questions.length; // 5
+    const current = Math.min(step, total); // от 0 до 5
+    return Math.round((current / total) * 100);
+  }
+
+  function renderQuestion() {
+    note.hidden = true; note.textContent = ''; note.className = 'lead-quiz__note';
+    if (step < questions.length) {
+      const q = questions[step];
+      body.innerHTML = `
+        <div class="lead-quiz__question">${q.text}</div>
+        <div class="lead-quiz__controls">
+          <button class="btn-quiz btn-yes" data-answer="yes" aria-label="Да">Да</button>
+          <button class="btn-quiz btn-no"  data-answer="no" aria-label="Нет">Нет</button>
+        </div>
+      `;
+      setProgress(calcPercent());
+    } else {
+      renderForm();
+      setProgress(100);
+    }
+  }
+
+  function renderForm() {
+    const preliminary = buildPreliminaryResult(answers);
+    body.innerHTML = `
+      <div class="lead-quiz__question">Предварительный результат</div>
+      <p>${preliminary}</p>
+
+      <div class="lead-quiz__badge"><i class="fa-solid fa-stopwatch"></i> Засекайте 15 минут</div>
+
+      <form id="lead-quiz-form" class="lead-quiz__form" novalidate>
+        <input type="text" name="name" class="input" placeholder="Ваше имя" autocomplete="name" required>
+        <input type="tel" name="phone" class="input" placeholder="Телефон" inputmode="tel" autocomplete="tel" required>
+        <input type="hidden" name="answers" value='${JSON.stringify(answers)}'>
+        <button type="submit" class="btn-submit full">Узнать, подхожу ли я под программу списания долгов</button>
+      </form>
+    `;
+
+    // Маска телефона
+    const phoneInput = body.querySelector('input[name="phone"]');
+    initPhoneMask(phoneInput);
+
+    const form = body.querySelector('#lead-quiz-form');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const name = String(formData.get('name') || '').trim();
+      const phone = String(formData.get('phone') || '').trim();
+
+      if (!name) return showError('Пожалуйста, укажите имя.');
+      if (!isValidPhone(phone)) return showError('Проверьте номер телефона. Формат: +7 (XXX) XXX-XX-XX');
+
+      // ==== Отправка ====
+      // Замените URL на ваш бэкенд/CRM. Пример ниже делает безопасный фоллбэк без реальной отправки.
+      fakeSend({ name, phone, answers })
+        .then(() => showSuccess('Спасибо! Мы свяжемся с вами в ближайшее время.'))
+        .catch(() => showError('Не удалось отправить данные. Попробуйте ещё раз.'));
+    });
+  }
+
+  function showError(msg) {
+    note.hidden = false; note.textContent = msg; note.className = 'lead-quiz__note error';
+  }
+  function showSuccess(msg) {
+    note.hidden = false; note.textContent = msg; note.className = 'lead-quiz__note success';
+    // Дополнительно: можно очистить форму/заблокировать кнопку
+    const btn = root.querySelector('.btn-submit');
+    if (btn) { btn.disabled = true; btn.style.opacity = .7; }
+  }
+
+  function fakeSend(payload) {
+    // Заглушка: эмуляция запроса на сервер
+    return new Promise((resolve) => {
+      console.log('[LeadQuiz] payload', payload);
+      setTimeout(resolve, 600);
+    });
+  }
+
+  function isValidPhone(v) {
+    // Принимаем только формат +7 (XXX) XXX-XX-XX
+    return /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/.test(v);
+  }
+
+  function initPhoneMask(input) {
+    const template = '+7 (___) ___-__-__';
+    input.placeholder = template;
+
+    function digitOnly(s) { return s.replace(/\D/g, ''); }
+
+    function onInput() {
+      let val = digitOnly(input.value);
+      if (val.startsWith('7')) val = val.slice(1);
+      if (val.startsWith('8')) val = val.slice(1);
+      const chars = template.split('');
+      let i = 0;
+      for (let idx = 0; idx < chars.length; idx++) {
+        if (chars[idx] === '_') {
+          chars[idx] = (i < val.length) ? val[i++] : '_';
+        }
+      }
+      input.value = chars.join('');
+      // курсор в конец
+      setTimeout(() => input.setSelectionRange(input.value.length, input.value.length), 0);
+    }
+
+    input.addEventListener('input', onInput);
+    input.addEventListener('focus', () => { if (!input.value) input.value = template; });
+    input.addEventListener('blur', () => { if (digitOnly(input.value).length < 10) input.value = ''; });
+  }
+
+  function buildPreliminaryResult(a) {
+    // Очень упрощённая логика для текста-подсказки, без юридических гарантий
+    const likely = a.debt_over_500k === 'yes' && a.overdue_over_3m === 'yes';
+    if (likely) {
+      return 'По предварительной оценке процедура банкротства вам может подходить. Точный вывод сделаем после быстрой консультации.';
+    }
+    return 'Даже если вы не прошли предварительные критерии, у нас могут быть альтернативные решения. Получите бесплатную консультацию — это займет 10–15 минут.';
+  }
+
+  // Ответ на вопрос
+  body.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-answer]');
+    if (!btn) return;
+    const val = btn.getAttribute('data-answer');
+    const q = questions[step];
+    if (q) {
+      answers[q.key] = val; // yes / no
+      step += 1;
+      renderQuestion();
+    }
+  });
+
+  // Первый рендер
+  renderQuestion();
+})();
+```
+
+---
+
+## 4) Как подключить реальную отправку формы
+
+Вместо `fakeSend(...)` вызовите ваш API/CRM. Например, если у вас есть обработчик `/api/lead`:
+
+```javascript
+function realSend(payload) {
+  return fetch('/api/lead', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(r => {
+    if (!r.ok) throw new Error('Network');
+    return r.json();
+  });
+}
+```
     <!-- Process -->
     <section class="process">
         <div class="container">
