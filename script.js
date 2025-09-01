@@ -76,3 +76,31 @@ render();
 // Заглушка отправки
 function fakeSend(payload){ return new Promise(res=>{ console.log('[LeadQuiz] payload', payload); setTimeout(res, 600); }); }
 })();
+
+.knowledge {
+  padding: 80px 0;
+  background: #f9f9f9;
+}
+
+.knowledge-list {
+  list-style: none;
+  padding: 0;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.knowledge-list li {
+  margin-bottom: 15px;
+}
+
+.knowledge-list a {
+  color: #2c5282;
+  font-size: 18px;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.knowledge-list a:hover {
+  color: #ff9f43;
+}
+
