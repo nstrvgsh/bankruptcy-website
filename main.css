@@ -534,3 +534,69 @@ footer {
         gap: 15px;
     }
 }
+/* ===== Lead Quiz (опрошник) ===== */
+.lead-quiz {
+background: #8fd14f; /* зелёный фон как на примере */
+color: #fff;
+padding: 48px 0;
+}
+.lead-quiz .nowrap { white-space: nowrap; }
+.lead-quiz__header { text-align: center; margin-bottom: 24px; }
+.lead-quiz__header h2 { font-size: 28px; line-height: 1.25; margin: 0 0 8px; }
+.lead-quiz__header p { margin: 0; opacity: .95; }
+
+
+.lead-quiz__card {
+background: #fff; color: #222;
+border-radius: 16px;
+padding: 24px;
+max-width: 880px;
+margin: 24px auto 0;
+box-shadow: 0 12px 30px rgba(0,0,0,.12);
+}
+
+
+/* Прогресс-бар */
+.lead-quiz__progress {
+position: relative; height: 16px; border-radius: 999px;
+background: #ecf3e7; overflow: hidden; margin-bottom: 20px;
+}
+.lead-quiz__progress-bar { height: 100%; width: 0%; background: #69b524; transition: width .3s ease; }
+.lead-quiz__progress-text { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #1d5d00; font-weight: 600; }
+
+
+/* Карточка вопроса */
+.lead-quiz__question { font-size: 20px; line-height: 1.35; margin: 8px 0 16px; font-weight: 700; }
+.lead-quiz__controls { display: flex; flex-wrap: wrap; gap: 12px; }
+
+
+/* Кнопки (да/нет) и основная */
+.btn-quiz {
+display: inline-flex; align-items: center; justify-content: center;
+padding: 12px 18px; border-radius: 10px; border: 0; cursor: pointer;
+font-weight: 700; transition: transform .05s ease, box-shadow .2s ease; user-select: none;
+}
+.btn-quiz:active { transform: translateY(1px); }
+.btn-yes { background: #69b524; color: #fff; }
+.btn-yes:hover { box-shadow: 0 6px 16px rgba(105,181,36,.35); }
+.btn-no { background: #f0f4ef; color: #333; }
+.btn-no:hover { box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+
+
+/* Финальная форма */
+.lead-quiz__form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.lead-quiz__form .full { grid-column: 1 / -1; }
+.input {
+width: 100%; border: 1px solid #e3e7e2; border-radius: 10px; padding: 14px 12px; font-size: 16px;
+}
+.input:focus { outline: 2px solid #8fd14f; border-color: transparent; }
+
+
+.btn-submit {
+background: #ff7a1a; color: #fff; border: 0; border-radius: 12px; padding: 14px 16px; font-size: 16px; font-weight: 800; cursor: pointer;
+box-shadow: 0 10px 18px rgba(255,122,26,.35); transition: transform .05s ease, box-shadow .2s ease;
+}
+.btn-submit:active { transform: translateY(1px); }
+
+
+}
