@@ -1,106 +1,88 @@
-// FAQ accordion
-document.querySelectorAll('.faq-question').forEach(q => {
-  q.addEventListener('click', () => {
-    const ans = q.nextElementSibling;
-    ans.classList.toggle('active');
-    const icon = q.querySelector('i');
-    icon.className = ans.classList.contains('active') ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
-  });
-});
+(function () {
+  const root = document.getElementById('lead-quiz');
+  if (!root) return;
 
-// ===== Lead Quiz =====
-function(){
-const phone = String(formData.get('phone')||'').trim();
-if(!name){showFormError('Пожалуйста, укажите имя.');return;}
-if(!isValidPhone(phone)){showFormError('Проверьте номер телефона. Формат: +7 (XXX) XXX-XX-XX');return;}
+  const body = root.querySelector('#lead-quiz-body');
+  const prevBtn = root.querySelector('#quiz-prev');
+  const nextBtn = root.querySelector('#quiz-next');
+  const progress = root.querySelector('.lead-quiz__progress');
+  const progressBar = root.querySelector('.lead-quiz__progress-bar');
+  const progressText = root.querySelector('.lead-quiz__progress-text');
+  const note = root.querySelector('#lead-quiz-note');
 
+  const questions = [
+    {
+      key: 'debt_amount', type: 'single', text: 'Какая у вас общая сумма долга?',
+      options: [
+        { value: 'lt_100k', label: 'до 100 000 руб.' },
+        { value: 'gte_100k', label: 'более 100 000 руб.' },
+      ]
+    },
+    {
+      key: 'assets', type: 'multi', text: 'Есть ли имущество, оформленное на вас?',
+      options: [
+        { value: 'none', label: 'нет' },
+        { value: 'apt', label: 'квартира' },
+        { value: 'car', label: 'машина' },
+        { value: 'house', label: 'дача/частный дом' },
+        { value: 'land', label: 'земельный участок' },
+        { value: 'other', label: 'другое' },
+      ]
+    },
+    {
+      key: 'debts_types', type: 'multi', text: 'Какие задолженности у вас есть?',
+      options: [
+        { value: 'bank_loans', label: 'Кредиты перед банками' },
+        { value: 'microloans', label: 'Микрокредиты' },
+        { value: 'tax_fines', label: 'Налоги и штрафы' },
+        { value: 'utilities', label: 'Задолженности по коммунальным платежам' },
+        { value: 'other', label: 'другое' },
+      ]
+    },
+    {
+      key: 'overdue', type: 'single', text: 'Есть ли у вас просрочки по кредитам?',
+      options: [
+        { value: 'yes', label: 'Да' },
+        { value: 'no', label: 'Нет' },
+      ]
+    },
+    {
+      key: 'collectors', type: 'single', text: 'Беспокоят ли вас коллекторы?',
+      options: [
+        { value: 'yes', label: 'Да' },
+        { value: 'no', label: 'Нет' },
+      ]
+    },
+  ];
 
-fakeSend({name, phone, answers})
-.then(()=> showSuccess('Спасибо! Мы свяжемся с вами в ближайшее время.'))
-.catch(()=> showFormError('Не удалось отправить данные. Попробуйте ещё раз.'));
-});
-}
+  let step = 0;
+  const answers = {};
 
+  function setProgress(percent) {
+    progressBar.style.width = percent + '%';
+    progress.setAttribute('aria-valuenow', String(percent));
+    progressText.textContent = percent + '%';
+  }
+  function calcPercent() {
+    const total = questions.length;
+    return Math.round((Math.min(step, total) / total) * 100);
+  }
 
-function showFormError(msg){ note.hidden=false; note.textContent=msg; note.className='lead-quiz__note error'; }
-function showSuccess(msg){ note.hidden=false; note.textContent=msg; note.className='lead-quiz__note success'; }
+  function render() {
+    note.hidden = true; note.textContent = ''; note.className = 'lead-quiz__note';
+    prevBtn.disabled = step === 0;
+    nextBtn.textContent = step < questions.length ? 'Далее' : 'Готово';
 
+    if (step < questions.length) {
+      const q = questions[step];
+      const saved = answers[q.key] || (q.type === 'multi' ? [] : null);
 
-function initPhoneMask(input){
-const template = '+7 (___) ___-__-__';
-input.placeholder = template;
-const digits = s => s.replace(/\D/g,'');
-function onInput(){
-let val = digits(input.value);
-if(val.startsWith('7')) val = val.slice(1);
-if(val.startsWith('8')) val = val.slice(1);
-const chars = template.split('');
-let i=0; for(let k=0;k<chars.length;k++){ if(chars[k]==='_'){ chars[k]=(i<val.length)?val[i++]:'_'; } }
-input.value = chars.join('');
-setTimeout(()=> input.setSelectionRange(input.value.length,input.value.length),0);
-}
-input.addEventListener('input', onInput);
-input.addEventListener('focus', ()=>{ if(!input.value) input.value = template; });
-input.addEventListener('blur', ()=>{ if(digits(input.value).length < 10) input.value=''; });
-}
-
-
-function isValidPhone(v){ return /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/.test(v); }
-
-
-function buildPreliminaryResult(a){
-const heavyDebt = a.debt_amount === 'gte_100k';
-const hasOverdue = a.overdue === 'yes';
-if(heavyDebt && hasOverdue){
-return 'По предварительной оценке процедура банкротства вам может подходить. Точный вывод сделаем после консультации.';
-}
-return 'Даже если вы не прошли предварительные критерии, есть альтернативные решения. Получите бесплатную консультацию — это займет 10–15 минут.';
-}
-
-
-// Навигация
-prevBtn.addEventListener('click', ()=>{ if(step>0){ step--; render(); }});
-nextBtn.addEventListener('click', ()=>{
-if(step < questions.length){
-if(!readSelection()) return; // обязательный выбор
-step++;
-render();
-}
-});
-
-
-// Первый рендер
-render();
-
-
-// Заглушка отправки
-function fakeSend(payload){ return new Promise(res=>{ console.log('[LeadQuiz] payload', payload); setTimeout(res, 600); }); }
-})();
-
-.knowledge {
-  padding: 80px 0;
-  background: #f9f9f9;
-}
-
-.knowledge-list {
-  list-style: none;
-  padding: 0;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.knowledge-list li {
-  margin-bottom: 15px;
-}
-
-.knowledge-list a {
-  color: #2c5282;
-  font-size: 18px;
-  text-decoration: none;
-  transition: color 0.3s;
-}
-
-.knowledge-list a:hover {
-  color: #ff9f43;
-}
-
+      const optionsHTML = q.options.map(opt => {
+        const checked = q.type === 'multi'
+          ? (saved.includes && saved.includes(opt.value))
+          : (saved === opt.value);
+        const type = q.type === 'multi' ? 'checkbox' : 'radio';
+        return `
+          <label class="option">
+            <input type="${type}" name="${q.key}" value="${opt.value}" ${checked ? 'checked' : ''}>
+            <span class="option__bullet"></span>
