@@ -29,8 +29,8 @@
           key: "debt_amount", type: "single",
           text: "Какая у вас общая сумма долга?",
           options: [
-            { value: "lt_100k", label: "до 100 000 руб." },
-            { value: "gte_100k", label: "более 100 000 руб." }
+            { value: "lt_100k", label: "до 250 000 руб." },
+            { value: "gte_100k", label: "более 250 000 руб." }
           ]
         },
         {
