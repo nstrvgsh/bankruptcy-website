@@ -72,6 +72,33 @@
         </div>
     </section>
 
+    <!-- Lead Quiz -->
+    <section class="lead-quiz" id="lead-quiz" aria-label="Опрос по банкротству">
+      <div class="container">
+        <div class="lead-quiz__header">
+          <h2>Узнайте, подходит ли вам процедура <span class="nowrap">списания долгов</span></h2>
+          <p>Ответьте на 5 вопросов и получите предварительное заключение юриста</p>
+        </div>
+
+        <div class="lead-quiz__card">
+          <div class="lead-quiz__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="lead-quiz__progress-bar" style="width:0%"></div>
+            <div class="lead-quiz__progress-text">0%</div>
+          </div>
+
+          <div class="lead-quiz__body" id="lead-quiz-body" aria-live="polite"></div>
+
+          <div class="lead-quiz__footer">
+            <button type="button" class="btn-outline" id="quiz-prev" disabled>Назад</button>
+            <button type="button" class="btn-primary" id="quiz-next">Далее</button>
+          </div>
+
+          <!-- Сообщения об ошибках / успехе -->
+          <div class="lead-quiz__note" id="lead-quiz-note" hidden></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Process -->
     <section class="process" id="process">
         <div class="container">
